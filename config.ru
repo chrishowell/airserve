@@ -1,0 +1,3 @@
+require "./airserve"
+
+run Cuba
