@@ -10,6 +10,24 @@ controller = AirPlayer::Controller.new({device: 0})
 
 dirroot = "/home/public/media/"
 
+def browse(dirroot, dirstub)
+      dirpath = "#{dirroot}#{dirstub}"
+      res.write "<!DOCTYPE html>"
+      res.write "<head><title>AirServe</title></head>"
+      res.write "<body>"
+      res.write "<ul>"
+      Dir.foreach("#{dirpath}") do |item|
+        next if item.start_with?('.')
+        if File.directory?("#{dirpath}/#{item}")
+          res.write "<li><a href='/browse#{dirstub}/#{item}'>#{item}</al></li><br />"
+          next
+        end
+        res.write "<li><a href='/play#{dirstub}/#{item}'>#{item}</li><br />"
+      end
+      res.write "</ul>"
+      res.write "</body>"
+end
+
 Cuba.define do
 
   # only GET requests
@@ -17,42 +35,27 @@ Cuba.define do
 
     # /
     on root do
-      res.write "<!DOCTYPE html>"
-      res.write "<head><title>AirServe</title></head>"
-      res.write "<body>"
-      res.write "<ul>"
-      Dir.foreach("#{dirroot}") do |item|
-        next if item.start_with?('.')
-	if File.directory?("#{dirroot}/#{item}")
-          res.write "<li><a href='/browse/#{item}'>#{item}</al></li><br />"
-	  next
-        end
-        res.write "<li><a href='/play/#{item}'>#{item}</li><br />"
-      end
-      res.write "</ul>"
-      res.write "</body>"
+      browse(dirroot, "")
     end
 
     # /about
-    on "play/:title" do |title|
+    on "play/(.*)" do |title|
       decoded_title = URI.unescape(title)
-      #controller = AirPlayer::Controller.new({device: 0})
+      controller = AirPlayer::Controller.new({device: 0})
       playlist = AirPlayer::Playlist.new()
-      playlist.add("#{dirroot}/Movies/#{decoded_title}")
+      playlist.add(dirroot + decoded_title)
       playlist.entries do |media|
         threads << Thread.new {
           controller.play(media)
           controller.pause
         }
         res.write "Playing #{decoded_title}<br />"
-	res.redirect "/"
-        #res.write "<a href='/pause'>pause</a>"
+        #res.redirect "/"
       end
     end
 
-    on "browse/(.*)" do |dirpath|
-      # test that it's not ..
-      res.write "#{dirpath}"
+    on "browse/(.*)" do |dirstub|
+      browse(dirroot, "/#{dirstub}")
     end
 
     #on "pause" do
