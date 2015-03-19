@@ -11,21 +11,34 @@ controller = AirPlayer::Controller.new({device: 0})
 dirroot = "/home/public/media/"
 
 def browse(dirroot, dirstub)
-      dirpath = "#{dirroot}#{dirstub}"
-      res.write "<!DOCTYPE html>"
-      res.write "<head><title>AirServe</title></head>"
-      res.write "<body>"
-      res.write "<ul>"
-      Dir.foreach("#{dirpath}") do |item|
-        next if item.start_with?('.')
-        if File.directory?("#{dirpath}/#{item}")
-          res.write "<li><a href='/browse#{dirstub}/#{item}'>#{item}</al></li><br />"
-          next
-        end
-        res.write "<li><a href='/play#{dirstub}/#{item}'>#{item}</li><br />"
-      end
-      res.write "</ul>"
-      res.write "</body>"
+  folders = []
+  files = []
+  dirpath = dirroot + dirstub
+  Dir.foreach(dirpath) do |item|
+    next if item.start_with?('.')
+    filepath = "#{dirpath}/#{item}"
+    if File.directory?(filepath)
+      folders << item
+      next
+    end
+    files << item
+  end
+
+  folders = folders.sort
+  files = files.sort
+
+  res.write "<!DOCTYPE html>"
+  res.write "<head><title>AirServe</title></head>"
+  res.write "<body>"
+  res.write "  <ul>"
+  folders.each do |folder|
+    res.write "    <li><a href='/browse#{dirstub}/#{folder}'>#{folder}</al></li><br />"
+  end
+  files.each do |file|
+    res.write "    <li><a href='/play#{dirstub}/#{file}'>#{file}</li><br />"
+  end
+  res.write "  </ul>"
+  res.write "</body>"
 end
 
 Cuba.define do
