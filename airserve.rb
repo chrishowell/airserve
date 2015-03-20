@@ -13,7 +13,7 @@ dirroot = "/home/public/media/"
 def browse(dirroot, dirstub)
   folders = []
   files = []
-  dirpath = dirroot + dirstub
+  dirpath = dirroot + URI.unescape(dirstub)
   Dir.foreach(dirpath) do |item|
     next if item.start_with?('.')
     filepath = "#{dirpath}/#{item}"
@@ -28,14 +28,20 @@ def browse(dirroot, dirstub)
   files = files.sort
 
   res.write "<!DOCTYPE html>"
-  res.write "<head><title>AirServe</title></head>"
+  res.write "<head>"
+  res.write "<title>AirServe #{dirstub}</title>"
+  res.write "<style>body {margin: 0;background-color:lightgray} ul {padding: 0; margin:0} .item {display:block;padding:8px;background-color:gray;margin:1px} a {color:white;text-decoration:none} .folder {font-weight:bold}</style>"
+  res.write "<meta name='viewport' content='user-scalable=no,width=device-width'>"
+  #res.write "<meta name='apple-mobile-web-app-capable' content='yes'>"
+  #res.write "<meta name='apple-mobile-web-app-status-bar-style' content='black'>"
+  res.write"</head>"
   res.write "<body>"
   res.write "  <ul>"
   folders.each do |folder|
-    res.write "    <li><a href='/browse#{dirstub}/#{folder}'>#{folder}</al></li><br />"
+    res.write "    <a href='/browse#{dirstub}/#{folder}'><li class='item folder'>#{folder}</li></a>"
   end
   files.each do |file|
-    res.write "    <li><a href='/play#{dirstub}/#{file}'>#{file}</li><br />"
+    res.write "    <a href='/play#{dirstub}/#{file}'><li class='item file'>#{file}</li></a>"
   end
   res.write "  </ul>"
   res.write "</body>"
