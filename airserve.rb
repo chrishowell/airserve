@@ -8,7 +8,7 @@ Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 #Cuba.plugin Cuba::Safe
 
 threads = []
-#controller = AirPlayer::Controller.new({device: 0})
+controller = AirPlayer::Controller.new({device: 0})
 
 dirroot = "/home/public/media/"
 
@@ -44,13 +44,11 @@ Cuba.define do
     # /about
     on "play/(.*)" do |title|
       decoded_title = URI.unescape(title)
-      controller = AirPlayer::Controller.new({device: 0})
       playlist = AirPlayer::Playlist.new()
       playlist.add(dirroot + decoded_title)
       playlist.entries do |media|
         threads << Thread.new {
           controller.play(media)
-          controller.pause #should go!
         }
 
         template = File.open("play.mustache", "rb").read
@@ -62,14 +60,25 @@ Cuba.define do
       browse(dirroot, "/#{dirstub}")
     end
 
-    on "pause" do
-      RestClient.post "192.168.0.10:7000/rate?value=0.000000", {}
-      res.write "<a href='/resume'>Resume</a>"
+    on "pause/(.*)" do |title|
+      decoded_title = URI.unescape(title)
+      template = File.open("pause.mustache", "rb").read
+      res.write Mustache.render(template, :title => decoded_title)
+      controller.pause
     end
 
-    on "resume" do
-      RestClient.post "192.168.0.10:7000/rate?value=1.000000", {}
-      res.write "<a href='/pause'>Pause</a>"
+    on "resume/(.*)" do |title|
+      decoded_title = URI.unescape(title)
+      template = File.open("play.mustache", "rb").read
+      res.write Mustache.render(template, :title => decoded_title)
+      controller.resume
+    end
+
+    on "stop/(.*)" do |title|
+      decoded_title = URI.unescape(title)      
+      template = File.open("stop.mustache", "rb").read
+      res.write Mustache.render(template, :title => decoded_title)
+      controller.stop
     end
 
     #on "skip?{.*}" do |mins|
