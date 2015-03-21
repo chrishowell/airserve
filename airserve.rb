@@ -1,13 +1,14 @@
 require "cuba"
 require "airplayer"
 require "rest_client"
+require "mustache"
 
 Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 
 #Cuba.plugin Cuba::Safe
 
 threads = []
-controller = AirPlayer::Controller.new({device: 0})
+#controller = AirPlayer::Controller.new({device: 0})
 
 dirroot = "/home/public/media/"
 
@@ -25,27 +26,9 @@ def browse(dirroot, dirstub)
     files << item
   end
 
-  folders = folders.sort
-  files = files.sort
-
-  res.write "<!DOCTYPE html>"
-  res.write "<head>"
-  res.write "<title>AirServe #{dirstub}</title>"
-  res.write "<style>body {margin: 0;background-color:lightgray} ul {padding: 0; margin:0} .item {display:block;padding:8px;background-color:gray;margin:1px} a {color:white;text-decoration:none} .folder {font-weight:bold}</style>"
-  res.write "<meta name='viewport' content='user-scalable=no,width=device-width'>"
-  #res.write "<meta name='apple-mobile-web-app-capable' content='yes'>"
-  #res.write "<meta name='apple-mobile-web-app-status-bar-style' content='black'>"
-  res.write"</head>"
-  res.write "<body>"
-  res.write "  <ul>"
-  folders.each do |folder|
-    res.write "    <a href='/browse#{dirstub}/#{folder}'><li class='item folder'>#{folder}</li></a>"
-  end
-  files.each do |file|
-    res.write "    <a href='/play#{dirstub}/#{file}'><li class='item file'>#{file}</li></a>"
-  end
-  res.write "  </ul>"
-  res.write "</body>"
+  template = File.open("browse.mustache", "rb").read
+  res.write Mustache.render(template, \
+    :dirstub => dirstub, :folders => folders.sort, :files => files.sort)
 end
 
 Cuba.define do
@@ -67,10 +50,11 @@ Cuba.define do
       playlist.entries do |media|
         threads << Thread.new {
           controller.play(media)
-          controller.pause
+          controller.pause #should go!
         }
-        res.write "Playing #{decoded_title}<br />"
-        res.write "<a href='/pause'>Pause</a>"
+
+        template = File.open("play.mustache", "rb").read
+        res.write Mustache.render(template, :title => decoded_title)
       end
     end
 
