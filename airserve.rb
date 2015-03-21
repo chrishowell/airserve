@@ -1,5 +1,6 @@
 require "cuba"
 require "airplayer"
+require "rest_client"
 
 Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 
@@ -69,7 +70,7 @@ Cuba.define do
           controller.pause
         }
         res.write "Playing #{decoded_title}<br />"
-        #res.redirect "/"
+        res.write "<a href='/pause'>Pause</a>"
       end
     end
 
@@ -77,11 +78,20 @@ Cuba.define do
       browse(dirroot, "/#{dirstub}")
     end
 
-    #on "pause" do
-    #  res.write "Pausing"
-    #  #controller.pause
-    #  @player.stop
-    #  res.write "Paused"
+    on "pause" do
+      RestClient.post "192.168.0.10:7000/rate?value=0.000000", {}
+      res.write "<a href='/resume'>Resume</a>"
+    end
+
+    on "resume" do
+      RestClient.post "192.168.0.10:7000/rate?value=1.000000", {}
+      res.write "<a href='/pause'>Pause</a>"
+    end
+
+    #on "skip?{.*}" do |mins|
+    #  seconds = mins * 60
+    #  RestClient.post "192.168.0.10:7000/scrub?position=#{seconds}", {}
+    #  res.write "<a href='/pause'>Pause</a>"
     #end
 
   end
