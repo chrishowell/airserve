@@ -7,6 +7,12 @@ Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 
 #Cuba.plugin Cuba::Safe
 
+class Array
+  def nice_sort
+    sort_by { |item| item.to_s.split(/(\d+)/).map { |e| [e.to_i, e] } }
+  end
+end
+
 dirroot = "/home/public/media/"
 controller = AirPlayer::Controller.new({device: 0, progress: false})
 
@@ -26,7 +32,7 @@ def browse(dirroot, dirstub)
 
   template = File.open("browse.mustache", "rb").read
   res.write Mustache.render(template, \
-    :dirstub => dirstub, :folders => folders.sort, :files => files.sort)
+    :dirstub => dirstub, :folders => folders.nice_sort, :files => files.nice_sort)
 end
 
 def mustache(template, path, title)
