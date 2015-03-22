@@ -11,4 +11,9 @@
 	<p>{{title}}</p>
 	<a class = "item" href="/play/{{path}}/{{title}}">Play</a>
 	<a class = "item" href="/browse/{{path}}">Back</a>
+
+	<form action="/edit_title/{{path}}/{{title}}" method="post" >
+		<label for="updated_title">Rename:</label><input name="updated_title" type="text" value="{{title}}"/>
+		<input id="submit" type="submit" />
+	</form>
 </body>

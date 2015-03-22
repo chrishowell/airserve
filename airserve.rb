@@ -91,4 +91,23 @@ Cuba.define do
     #end
 
   end
+
+  on post do
+    on "edit_title/(.*)/:title" do |e_path, e_title|
+      on param("updated_title") do |e_updated_title|
+
+        title = URI.unescape(e_title)
+        path = URI.unescape(e_path)
+        updated_title = URI.unescape(e_updated_title)
+
+        old_ext = title.split(".").last
+        new_ext = updated_title.split(".").last
+        if old_ext != new_ext
+          updated_title = updated_title + "." + old_ext
+        end
+        File.rename(dirroot + path + "/" + title, dirroot + path + "/" + updated_title)
+        res.redirect URI.escape("/view/" + path + "/" + updated_title)
+      end
+    end
+  end
 end
