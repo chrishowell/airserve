@@ -99,6 +99,11 @@ Cuba.define do
       controller.resume
     end
 
+    on "assets/(.*)" do |e_path|
+      path = URI.unescape(e_path)
+      res.write File.open("./assets/" + path, "rb").read
+    end
+
   end
 
   on post do
