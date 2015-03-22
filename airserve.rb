@@ -29,6 +29,13 @@ def browse(dirroot, dirstub)
     :dirstub => dirstub, :folders => folders.sort, :files => files.sort)
 end
 
+def mustache(template, path, title)
+  decoded_title = URI.unescape(title)
+  decoded_path = URI.unescape(path)
+  template = File.open(template, "rb").read
+  return Mustache.render(template, :path => decoded_path, :title => decoded_title)
+end
+
 Cuba.define do
 
   # only GET requests
@@ -40,22 +47,22 @@ Cuba.define do
     end
 
     # /about
-    on "play/(.*)" do |title|
-      decoded_title = URI.unescape(title)
-      playlist = AirPlayer::Playlist.new()
-      playlist.add(dirroot + decoded_title)
-      playlist.entries do |media|
-        Thread.new {
-          begin
-            controller.play(media)
-          rescue
-            controller = AirPlayer::Controller.new({device: 0, progress: false})
-            controller.play(media)
-          end
-        }
+    on "play/(.*)/:title" do |path, title|
 
-        template = File.open("play.mustache", "rb").read
-        res.write Mustache.render(template, :title => decoded_title)
+      res.write mustache("play.mustache", path, title)
+
+      full_path = URI.unescape(path) + "/" + URI.unescape(title)
+      playlist = AirPlayer::Playlist.new()
+      playlist.add(dirroot + full_path)
+      playlist.entries do |media|
+      Thread.new {
+        begin
+          controller.play(media)
+        rescue
+          controller = AirPlayer::Controller.new({device: 0, progress: false})
+          controller.play(media)
+        end
+      }
       end
     end
 
@@ -63,32 +70,18 @@ Cuba.define do
       browse(dirroot, "/#{dirstub}")
     end
 
-    on "view/(.*)" do |title|
-      decoded_title = URI.unescape(title)
-      template = File.open("view.mustache", "rb").read
-      res.write Mustache.render(template, :title => decoded_title)
+    on "view/(.*)/:title" do |path, title|
+      res.write mustache("view.mustache", path, title)
+    end
+
+    on "pause/(.*)/:title" do |path, title|
+      res.write mustache("pause.mustache", path, title)
       controller.pause
     end
 
-    on "pause/(.*)" do |title|
-      decoded_title = URI.unescape(title)
-      template = File.open("pause.mustache", "rb").read
-      res.write Mustache.render(template, :title => decoded_title)
-      controller.pause
-    end
-
-    on "resume/(.*)" do |title|
-      decoded_title = URI.unescape(title)
-      template = File.open("play.mustache", "rb").read
-      res.write Mustache.render(template, :title => decoded_title)
+    on "resume/(.*)/:title" do |path, title|
+      res.write mustache("play.mustache", path, title)
       controller.resume
-    end
-
-    on "stop/(.*)" do |title|
-      decoded_title = URI.unescape(title)      
-      template = File.open("stop.mustache", "rb").read
-      res.write Mustache.render(template, :title => decoded_title)
-      controller.stop
     end
 
     #on "skip?{.*}" do |mins|
