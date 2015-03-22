@@ -16,10 +16,10 @@ end
 dirroot = "/home/public/media/"
 controller = AirPlayer::Controller.new({device: 0, progress: false})
 
-def browse(dirroot, dirstub)
+def browse(dirroot, e_dirstub)
   folders = []
   files = []
-  dirpath = dirroot + URI.unescape(dirstub)
+  dirpath = dirroot + URI.unescape(e_dirstub)
   Dir.foreach(dirpath) do |item|
     next if item.start_with?('.')
     filepath = "#{dirpath}/#{item}"
@@ -32,32 +32,45 @@ def browse(dirroot, dirstub)
 
   template = File.open("browse.mustache", "rb").read
   res.write Mustache.render(template, \
-    :dirstub => dirstub, :folders => folders.nice_sort, :files => files.nice_sort)
+    :dirstub => e_dirstub, :folders => folders.nice_sort, :files => files.nice_sort)
 end
 
-def mustache(template, path, title)
-  decoded_title = URI.unescape(title)
-  decoded_path = URI.unescape(path)
+def mustache(template, e_path, e_title)
+
+  title = URI.unescape(e_title)
+  path = URI.unescape(e_path)
+
   template = File.open(template, "rb").read
-  return Mustache.render(template, :path => decoded_path, :title => decoded_title)
+
+  Mustache.render(template, :path => path, :title => title)
+end
+
+def preserve_extension(title, updated_title)
+  old_ext = title.split(".").last
+  new_ext = updated_title.split(".").last
+  if old_ext != new_ext
+    updated_title = updated_title + "." + old_ext
+  end
+  updated_title
 end
 
 Cuba.define do
 
-  # only GET requests
   on get do
 
-    # /
     on root do
       browse(dirroot, "")
     end
 
-    # /about
-    on "play/(.*)/:title" do |path, title|
+    on "browse/(.*)" do |e_dirstub|
+      browse(dirroot, "/#{e_dirstub}")
+    end
 
-      res.write mustache("play.mustache", path, title)
+    on "play/(.*)/:title" do |e_path, e_title|
 
-      full_path = URI.unescape(path) + "/" + URI.unescape(title)
+      res.write mustache("play.mustache", e_path, e_title)
+
+      full_path = URI.unescape(e_path + "/" + e_title)
       playlist = AirPlayer::Playlist.new()
       playlist.add(dirroot + full_path)
       playlist.entries do |media|
@@ -72,21 +85,17 @@ Cuba.define do
       end
     end
 
-    on "browse/(.*)" do |dirstub|
-      browse(dirroot, "/#{dirstub}")
+    on "view/(.*)/:title" do |e_path, e_title|
+      res.write mustache("view.mustache", e_path, e_title)
     end
 
-    on "view/(.*)/:title" do |path, title|
-      res.write mustache("view.mustache", path, title)
-    end
-
-    on "pause/(.*)/:title" do |path, title|
-      res.write mustache("pause.mustache", path, title)
+    on "pause/(.*)/:title" do |e_path, e_title|
+      res.write mustache("pause.mustache", e_path, e_title)
       controller.pause
     end
 
-    on "resume/(.*)/:title" do |path, title|
-      res.write mustache("play.mustache", path, title)
+    on "resume/(.*)/:title" do |e_path, e_title|
+      res.write mustache("play.mustache", e_path, e_title)
       controller.resume
     end
 
@@ -96,32 +105,27 @@ Cuba.define do
 
     on "skip/(.*)" do |e_path|
       on param("mins") do |mins|
-        print "Number of mins" + mins + "\n"
+
         seconds = mins.to_i * 60
-        print "Number of seconds " + seconds.to_s + "\n"
         controller.skip(seconds)
         res.redirect "/resume/" + e_path
-      end
-
-      on true do
-        res.write "time not provided"
       end
     end
 
     on "edit_title/(.*)/:title" do |e_path, e_title|
       on param("updated_title") do |e_updated_title|
 
-        title = URI.unescape(e_title)
         path = URI.unescape(e_path)
-        updated_title = URI.unescape(e_updated_title)
+        title = URI.unescape(e_title)
+        full_path = dirroot + path + "/" + title
 
-        old_ext = title.split(".").last
-        new_ext = updated_title.split(".").last
-        if old_ext != new_ext
-          updated_title = updated_title + "." + old_ext
-        end
-        File.rename(dirroot + path + "/" + title, dirroot + path + "/" + updated_title)
-        res.redirect URI.escape("/view/" + path + "/" + updated_title)
+        updated_title = preserve_extension(title, URI.unescape(e_updated_title))
+        updated_full_path = dirroot + path + "/" + updated_title
+        updated_stub_path = path + "/" + updated_title
+
+        File.rename(full_path, updated_full_path)
+
+        res.redirect URI.escape("/view/" + updated_stub_path)
       end
     end
   end
