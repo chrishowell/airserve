@@ -84,15 +84,24 @@ Cuba.define do
       controller.resume
     end
 
-    #on "skip?{.*}" do |mins|
-    #  seconds = mins * 60
-    #  RestClient.post "192.168.0.10:7000/scrub?position=#{seconds}", {}
-    #  res.write "<a href='/pause'>Pause</a>"
-    #end
-
   end
 
   on post do
+
+    on "skip/(.*)" do |e_path|
+      on param("mins") do |mins|
+        print "Number of mins" + mins + "\n"
+        seconds = mins.to_i * 60
+        print "Number of seconds " + seconds.to_s + "\n"
+        controller.skip(seconds)
+        res.redirect "/resume/" + e_path
+      end
+
+      on true do
+        res.write "time not provided"
+      end
+    end
+
     on "edit_title/(.*)/:title" do |e_path, e_title|
       on param("updated_title") do |e_updated_title|
 
