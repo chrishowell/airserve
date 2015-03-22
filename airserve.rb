@@ -7,10 +7,8 @@ Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 
 #Cuba.plugin Cuba::Safe
 
-threads = []
-controller = AirPlayer::Controller.new({device: 0})
-
 dirroot = "/home/public/media/"
+controller = AirPlayer::Controller.new({device: 0, progress: false})
 
 def browse(dirroot, dirstub)
   folders = []
@@ -47,8 +45,13 @@ Cuba.define do
       playlist = AirPlayer::Playlist.new()
       playlist.add(dirroot + decoded_title)
       playlist.entries do |media|
-        threads << Thread.new {
-          controller.play(media)
+        Thread.new {
+          begin
+            controller.play(media)
+          rescue
+            controller = AirPlayer::Controller.new({device: 0, progress: false})
+            controller.play(media)
+          end
         }
 
         template = File.open("play.mustache", "rb").read
@@ -58,6 +61,13 @@ Cuba.define do
 
     on "browse/(.*)" do |dirstub|
       browse(dirroot, "/#{dirstub}")
+    end
+
+    on "view/(.*)" do |title|
+      decoded_title = URI.unescape(title)
+      template = File.open("view.mustache", "rb").read
+      res.write Mustache.render(template, :title => decoded_title)
+      controller.pause
     end
 
     on "pause/(.*)" do |title|
