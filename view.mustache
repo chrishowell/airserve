@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <head>
-	<title>AirServe - Viewing {{title}}</title>
-	<style>body {margin: 0;background-color:lightgray} ul {padding: 0; margin:0} .item {display:block;padding:8px;background-color:gray;margin:1px} a {color:white;text-decoration:none} .folder {font-weight:bold}</style>
-	<style>p {text-align:center;display:block;padding:8px;background-color:black;margin:1px;color:white;font-weight:bold} </style>
-	<meta name="viewport" content="user-scalable=no,width=device-width">
+    <title>AirServe - Viewing {{title}}</title>
+    <link rel="stylesheet" type="text/css" href="/assets/styles.css">
+    <meta name="viewport" content="user-scalable=no,width=device-width">
+    <meta charset="utf-8"/>
 	<!--<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">-->
 </head>
@@ -12,10 +12,10 @@
 	<a class = "item" href="/play/{{path}}/{{title}}">Play</a>
 	<a class = "item" href="/browse/{{path}}">Back</a>
 
-	<form action="/edit_title/{{path}}/{{title}}" method="post" >
-        <input id="submit" type="submit" value="Rename" style="float:right"/>
-        <div style="overflow: hidden; padding-right: .5em;">
-		    <input style="width:100%" name="updated_title" type="text" value="{{title}}"/>
+	<form class="inline_form" action="/edit_title/{{path}}/{{title}}" method="post">
+        <input id="submit" type="submit" value="Rename" />
+        <div>
+		    <input name="updated_title" type="text" value="{{title}}" />
         </div>
 	</form>
 </body>

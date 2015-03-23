@@ -13,13 +13,13 @@ class Array
   end
 end
 
-dirroot = "/home/public/media/"
+DIR_ROOT = "/home/public/media/"
 controller = AirPlayer::Controller.new({device: 0, progress: false})
 
-def browse(dirroot, e_dirstub)
+def browse(e_dirstub)
   folders = []
   files = []
-  dirpath = dirroot + URI.unescape(e_dirstub)
+  dirpath = DIR_ROOT + URI.unescape(e_dirstub)
   Dir.foreach(dirpath) do |item|
     next if item.start_with?('.')
     filepath = "#{dirpath}/#{item}"
@@ -59,11 +59,11 @@ Cuba.define do
   on get do
 
     on root do
-      browse(dirroot, "")
+      res.redirect("/browse/")
     end
 
     on "browse/(.*)" do |e_dirstub|
-      browse(dirroot, "/#{e_dirstub}")
+      browse("/#{e_dirstub}")
     end
 
     on "play/(.*)/:title" do |e_path, e_title|
@@ -72,7 +72,7 @@ Cuba.define do
 
       full_path = URI.unescape(e_path + "/" + e_title)
       playlist = AirPlayer::Playlist.new()
-      playlist.add(dirroot + full_path)
+      playlist.add(DIR_ROOT + full_path)
       playlist.entries do |media|
       Thread.new {
         begin
@@ -99,10 +99,10 @@ Cuba.define do
       controller.resume
     end
 
-    on "assets/(.*)" do |e_path|
-      path = URI.unescape(e_path)
-      res.write File.open("./assets/" + path, "rb").read
-    end
+    #on "assets/(.*)" do |e_path|
+    #  path = URI.unescape(e_path)
+    #  res.write File.open("assets/" + path, "rb").read
+    #end
 
   end
 
@@ -122,10 +122,10 @@ Cuba.define do
 
         path = URI.unescape(e_path)
         title = URI.unescape(e_title)
-        full_path = dirroot + path + "/" + title
+        full_path = DIR_ROOT + path + "/" + title
 
         updated_title = preserve_extension(title, URI.unescape(e_updated_title))
-        updated_full_path = dirroot + path + "/" + updated_title
+        updated_full_path = DIR_ROOT + path + "/" + updated_title
         updated_stub_path = path + "/" + updated_title
 
         File.rename(full_path, updated_full_path)

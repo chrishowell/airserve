@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <head>
-	<title>AirServe {{dirstub}}</title>
-	<style>body {margin: 0;background-color:lightgray} ul {padding: 0; margin:0} .item {display:block;padding:8px;background-color:gray;margin:1px} a {color:white;text-decoration:none} .folder {font-weight:bold}</style>
-	<meta name="viewport" content="user-scalable=no,width=device-width">
+    <title>AirServe {{dirstub}}</title>
+    <link rel="stylesheet" type="text/css" href="/assets/styles.css">
+    <meta name="viewport" content="user-scalable=no,width=device-width">
+    <meta charset="utf-8"/>
 	<!--<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">-->
 </head>
 <body>
 	<ul>
 		{{#folders}}
-		<a href="/browse{{dirstub}}/{{.}}"><li class="item folder">{{.}}</li></a>
+        <li class="item folder"><a href="/browse{{dirstub}}/{{.}}">{{.}}</a></li>
 		{{/folders}}
 		{{#files}}
-		<a href="/view{{dirstub}}/{{.}}"><li class="item file">{{.}}</li></a>
+		<li class="item file"><a href="/view{{dirstub}}/{{.}}">{{.}}</a></li>
 		{{/files}}
 	</ul>
 </body>
