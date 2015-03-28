@@ -5,6 +5,12 @@ require "mustache"
 
 Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 
+module URI
+  remove_const :DEFAULT_PARSER
+  unreserved = REGEXP::PATTERN::UNRESERVED
+  DEFAULT_PARSER = Parser.new(:UNRESERVED => unreserved + "\\[\\]")
+end
+
 #Cuba.plugin Cuba::Safe
 
 class Array
