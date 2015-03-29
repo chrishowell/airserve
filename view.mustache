@@ -10,10 +10,10 @@
 </head>
 <body>
 	<p>{{title}}</p>
-	<a class = "item" href="/play/{{path}}/{{title}}">Play</a>
+	<a class = "item" href="/play/{{path}}/{{filename}}">Play</a>
 	<a class = "item" href="/browse/{{path}}">Back</a>
 
-	<form class="inline_form" action="/edit_title/{{path}}/{{title}}" method="post">
+	<form class="inline_form" action="/edit_title/{{path}}/{{filename}}" method="post">
         <input id="submit" type="submit" value="Rename" />
         <div>
 		    <input name="updated_title" type="text" value="{{title}}" />

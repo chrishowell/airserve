@@ -41,14 +41,15 @@ def browse(e_dirstub)
     :dirstub => e_dirstub, :folders => folders.nice_sort, :files => files)
 end
 
-def mustache(template, e_path, e_title)
+def mustache(template, e_path, e_filename)
 
-  title = URI.unescape(e_title)
+  filename = URI.unescape(e_filename)
+  title = remove_extension(filename)
   path = URI.unescape(e_path)
 
   template = File.open(template, "rb").read
 
-  Mustache.render(template, :path => path, :title => title)
+  Mustache.render(template, :path => path, :title => title, :filename => filename)
 end
 
 def remove_extension(title)
@@ -56,13 +57,9 @@ def remove_extension(title)
   title.to_s.chomp("." + ext)
 end
 
-def preserve_extension(title, updated_title)
-  old_ext = title.split(".").last
-  new_ext = updated_title.split(".").last
-  if old_ext != new_ext
-    updated_title = updated_title + "." + old_ext
-  end
-  updated_title
+def clone_extension(title, updated_title)
+  ext = title.split(".").last
+  updated_title + "." + ext
 end
 
 Cuba.define do
@@ -96,17 +93,17 @@ Cuba.define do
       end
     end
 
-    on "view/(.*)/:title" do |e_path, e_title|
-      res.write mustache("view.mustache", e_path, e_title)
+    on "view/(.*)/:filename" do |e_path, e_filename|
+      res.write mustache("view.mustache", e_path, e_filename)
     end
 
-    on "pause/(.*)/:title" do |e_path, e_title|
-      res.write mustache("pause.mustache", e_path, e_title)
+    on "pause/(.*)/:title" do |e_path, e_filename|
+      res.write mustache("pause.mustache", e_path, e_filename)
       controller.pause
     end
 
-    on "resume/(.*)/:title" do |e_path, e_title|
-      res.write mustache("play.mustache", e_path, e_title)
+    on "resume/(.*)/:title" do |e_path, e_filename|
+      res.write mustache("play.mustache", e_path, e_filename)
       controller.resume
     end
 
@@ -123,16 +120,17 @@ Cuba.define do
       end
     end
 
-    on "edit_title/(.*)/:title" do |e_path, e_title|
+    on "edit_title/(.*)/:title" do |e_path, e_filename|
       on param("updated_title") do |e_updated_title|
 
         path = URI.unescape(e_path)
-        title = URI.unescape(e_title)
-        full_path = DIR_ROOT + path + "/" + title
+        filename = URI.unescape(e_filename)
+        full_path = DIR_ROOT + path + "/" + filename
 
-        updated_title = preserve_extension(title, URI.unescape(e_updated_title))
-        updated_full_path = DIR_ROOT + path + "/" + updated_title
-        updated_stub_path = path + "/" + updated_title
+        updated_title = URI.unescape(e_updated_title)
+        updated_filename = clone_extension(filename, updated_title)
+        updated_full_path = DIR_ROOT + path + "/" + updated_filename
+        updated_stub_path = path + "/" + updated_filename
 
         File.rename(full_path, updated_full_path)
 
