@@ -38,7 +38,7 @@ def browse(e_dirstub)
 
   template = File.open("browse.mustache", "rb").read
   res.write Mustache.render(template, \
-    :dirstub => e_dirstub, :folders => folders.nice_sort, :files => files)
+    :dirstub => e_dirstub, :folders => folders.nice_sort, :files => files.nice_sort)
 end
 
 def mustache(template, e_path, e_filename)
