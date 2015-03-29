@@ -33,12 +33,12 @@ def browse(e_dirstub)
       folders << item
       next
     end
-    files << item
+    files << { "filename" => item, "title" => remove_extension(item) }
   end
 
   template = File.open("browse.mustache", "rb").read
   res.write Mustache.render(template, \
-    :dirstub => e_dirstub, :folders => folders.nice_sort, :files => files.nice_sort)
+    :dirstub => e_dirstub, :folders => folders.nice_sort, :files => files)
 end
 
 def mustache(template, e_path, e_title)
@@ -49,6 +49,11 @@ def mustache(template, e_path, e_title)
   template = File.open(template, "rb").read
 
   Mustache.render(template, :path => path, :title => title)
+end
+
+def remove_extension(title)
+  ext = title.split(".").last
+  title.to_s.chomp("." + ext)
 end
 
 def preserve_extension(title, updated_title)
@@ -104,11 +109,6 @@ Cuba.define do
       res.write mustache("play.mustache", e_path, e_title)
       controller.resume
     end
-
-    #on "assets/(.*)" do |e_path|
-    #  path = URI.unescape(e_path)
-    #  res.write File.open("assets/" + path, "rb").read
-    #end
 
   end
 
