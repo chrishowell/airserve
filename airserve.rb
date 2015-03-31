@@ -20,7 +20,7 @@ class Array
 end
 
 DIR_ROOT = "/home/public/media/"
-controller = AirPlayer::Controller.new({device: 0, progress: false})
+$controller = nil
 
 def browse(e_dirstub)
   folders = []
@@ -75,6 +75,7 @@ Cuba.define do
     end
 
     on "play/(.*)/:title" do |e_path, e_title|
+      $controller = AirPlayer::Controller.new({device: 0, progress: false})
 
       res.write mustache("play.mustache", e_path, e_title)
 
@@ -83,12 +84,7 @@ Cuba.define do
       playlist.add(DIR_ROOT + full_path)
       playlist.entries do |media|
       Thread.new {
-        begin
-          controller.play(media)
-        rescue
-          controller = AirPlayer::Controller.new({device: 0, progress: false})
-          controller.play(media)
-        end
+          $controller.play(media)
       }
       end
     end
@@ -98,13 +94,23 @@ Cuba.define do
     end
 
     on "pause/(.*)/:title" do |e_path, e_filename|
+      if $controller.nil?
+        res.redirect "/"
+        next
+      end
+      
       res.write mustache("pause.mustache", e_path, e_filename)
-      controller.pause
+      $controller.pause
     end
 
     on "resume/(.*)/:title" do |e_path, e_filename|
+      if $controller.nil?
+        res.redirect "/"
+        next
+      end
+
       res.write mustache("play.mustache", e_path, e_filename)
-      controller.resume
+      $controller.resume
     end
 
   end
@@ -113,15 +119,23 @@ Cuba.define do
 
     on "skip/(.*)" do |e_path|
       on param("mins") do |mins|
+        if $controller.nil?
+          res.redirect "/"
+          next
+        end
 
         seconds = mins.to_i * 60
-        controller.skip(seconds)
+        $controller.skip(seconds)
         res.redirect "/resume/" + e_path
       end
     end
 
     on "edit_title/(.*)/:title" do |e_path, e_filename|
       on param("updated_title") do |e_updated_title|
+        if $controller.nil?
+          res.redirect "/"
+          next
+        end
 
         path = URI.unescape(e_path)
         filename = URI.unescape(e_filename)
